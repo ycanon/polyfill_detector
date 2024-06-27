@@ -13,3 +13,5 @@ https://www.bleepingcomputer.com/news/security/polyfillio-javascript-supply-chai
 ## Ejemplo:
 
 python3 polyfill_tester.py listadourls.txt
+
+![clip](https://github.com/ycanon/polyfill_detector/assets/16308620/1c811e98-b4f7-4f06-82c6-fc2273ea3d67)
