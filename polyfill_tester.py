@@ -1,46 +1,50 @@
 import csv
 import argparse
-from requests_html import HTMLSession
-from requests_html import HTMLResponse
+import warnings
+from requests_html import HTMLSession, HTMLResponse
+from colorama import Fore, Style
+from urllib3.exceptions import InsecureRequestWarning
 
-# Configurar argparse para manejar argumentos de línea de comandos
-parser = argparse.ArgumentParser(description="Verificar si sitios web son potencialmente vulnerables.")
+warnings.simplefilter('ignore', InsecureRequestWarning)
+
+parser = argparse.ArgumentParser(description="Verificar sitios web que son potencialmente vulnerables.")
 parser.add_argument("input_file", help="Archivo de texto con la lista de URLs.")
 args = parser.parse_args()
 
-# Definir el archivo de salida
 output_file = 'results.csv'
 
-# Inicializar una sesión de requests_html con configuración para deshabilitar verificación de certificados SSL
 session = HTMLSession()
-session.verify = False  # Deshabilitar la verificación de certificados SSL
+session.verify = False
 
-# Función para verificar si un sitio contiene el dominio polyfill.io
 def is_vulnerable(url):
     try:
         response: HTMLResponse = session.get(url)
-        response.html.render()  # Renderizar la página para ejecutar el JavaScript
-        if 'polyfill.io' in response.html.html:
-            return True
+        response.html.render(timeout=20)
+        html_lines = response.html.html.splitlines()
+        for line in html_lines:
+            if 'polyfill.io' in line:
+                return True, line.strip()
     except Exception as e:
-        print(f"Error al acceder a {url}: {e}")
-    return False
+        print(f"{Fore.RED}Error al acceder a {url}: {e}{Style.RESET_ALL}")
+    return False, None
 
-# Leer la lista de URLs del archivo de texto
 with open(args.input_file, 'r') as file:
     urls = [line.strip() for line in file]
 
-# Procesar cada URL y verificar si es vulnerable
 results = []
 for url in urls:
-    print(f"Verificando {url}...")
-    vulnerable = is_vulnerable(url)
-    results.append([url, 'Sí' if vulnerable else 'No'])
+    print(f"{Fore.YELLOW}Verificando {url}...{Style.RESET_ALL}")
+    vulnerable, line_content = is_vulnerable(url)
+    if vulnerable:
+        print(f"{Fore.GREEN}URL: {url} es potencialmente vulnerable. Contenido: {line_content}{Style.RESET_ALL}")
+        results.append([url, 'Sí'])
+    else:
+        print(f"{Fore.CYAN}URL: {url} no es potencialmente vulnerable.{Style.RESET_ALL}")
+        results.append([url, 'No'])
 
-# Guardar los resultados en un archivo CSV
 with open(output_file, 'w', newline='') as csvfile:
     csvwriter = csv.writer(csvfile)
     csvwriter.writerow(['URL', 'Potencialmente Vulnerable'])
     csvwriter.writerows(results)
 
-print(f"Resultados guardados en {output_file}")
+print(f"{Fore.MAGENTA}Resultados guardados en {output_file}{Style.RESET_ALL}")
