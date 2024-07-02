@@ -57,7 +57,7 @@ for url in urls:
         lines_str = '\n'.join(found_lines)
         print(f"{Fore.GREEN}URL: {url} es potencialmente vulnerable. Dominios encontrados: {domains_str}{Style.RESET_ALL}")
         print(f"{Fore.GREEN}Líneas de código vulnerables:\n{lines_str}{Style.RESET_ALL}")
-        results.append([url, 'Sí', domains_str])
+        results.append([url, 'Si', domains_str])
     else:
         print(f"{Fore.CYAN}URL: {url} no es potencialmente vulnerable.{Style.RESET_ALL}")
         results.append([url, 'No', ''])
